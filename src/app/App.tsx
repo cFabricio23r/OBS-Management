@@ -5,12 +5,14 @@ import { VisualBuilder } from "../components/builder/VisualBuilder";
 import { SettingsView } from "../components/settings/SettingsView";
 import { Toast } from "../components/ui/Toast";
 import { useGlobalShortcuts } from "../lib/shortcuts/useGlobalShortcuts";
+import { useT } from "../lib/i18n/translations";
 import { useAppStore } from "../store/useAppStore";
 import { useObsStore } from "../store/useObsStore";
 
 export const App = () => {
   const { view, hydrate, hydrated } = useAppStore();
   const hydrateSettings = useObsStore((store) => store.hydrateSettings);
+  const t = useT();
   useGlobalShortcuts();
 
   useEffect(() => {
@@ -19,7 +21,7 @@ export const App = () => {
   }, [hydrate, hydrateSettings]);
 
   if (!hydrated) {
-    return <div className="grid min-h-screen place-items-center bg-obs-950 text-sm font-bold text-slate-300">Loading control surface...</div>;
+    return <div className="grid min-h-screen place-items-center bg-obs-950 text-sm font-bold text-slate-300">{t("loading")}</div>;
   }
 
   return (

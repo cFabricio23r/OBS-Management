@@ -4,6 +4,7 @@ import { useAppStore } from "../../store/useAppStore";
 import { useObsStore } from "../../store/useObsStore";
 import type { Sequence, SequenceStep } from "../../types/config";
 import { obsClient } from "../../lib/obs/obsClient";
+import { useT } from "../../lib/i18n/translations";
 import { sequenceRunner } from "../../lib/sequence/sequenceEngine";
 import { sequenceTemplates, uid } from "../../lib/sequence/sequenceTemplates";
 import { Button } from "../ui/Button";
@@ -20,6 +21,7 @@ const stepLabel = (step: SequenceStep) => {
 export const VisualBuilder = () => {
   const { config, upsertSequence, duplicateSequence, deleteSequence, addLog } = useAppStore();
   const obs = useObsStore();
+  const t = useT();
   const scenes = useMemo(() => Array.from(new Set([...obs.state.scenes.map((s) => s.sceneName), ...Object.keys(config.sequences)])), [obs.state.scenes, config.sequences]);
   const [sceneName, setSceneName] = useState(scenes[0] ?? "Altar");
   const [editing, setEditing] = useState<Sequence | null>(null);
@@ -68,13 +70,13 @@ export const VisualBuilder = () => {
   return (
     <div className="grid gap-3 lg:grid-cols-[320px_1fr]">
       <aside className="rounded-2xl border border-white/[0.08] bg-slate-900/72 p-3 shadow-glow backdrop-blur-xl">
-        <Field label="OBS Scene">
+        <Field label={t("obsScene")}>
           <Select value={sceneName} onChange={(event) => setSceneName(event.target.value)}>
             {scenes.map((scene) => <option key={scene}>{scene}</option>)}
           </Select>
         </Field>
-        <Button className="mt-2 w-full" onClick={loadSources}>Load real scene sources</Button>
-        <div className="mt-4 text-xs font-black uppercase text-slate-400">Managed Sources</div>
+        <Button className="mt-2 w-full" onClick={loadSources}>{t("loadRealSceneSources")}</Button>
+        <div className="mt-4 text-xs font-black uppercase text-slate-400">{t("managedSources")}</div>
         <div className="mt-2 grid max-h-64 gap-1 overflow-auto rounded-xl bg-slate-950/58 p-2">
           {(sources.length ? sources : (sequences[0]?.managedSources ?? []).map((sourceName) => ({ sourceName, sceneItemId: 0, sceneItemEnabled: false }))).map((source) => (
             <label key={source.sourceName} className="flex items-center gap-2 rounded px-2 py-1 text-sm text-slate-300 hover:bg-white/5">
@@ -87,7 +89,7 @@ export const VisualBuilder = () => {
           ))}
         </div>
         <div className="mt-4 grid gap-2">
-          <div className="text-xs font-black uppercase text-slate-400">Quick Templates</div>
+          <div className="text-xs font-black uppercase text-slate-400">{t("quickTemplates")}</div>
           {sequenceTemplates.map((template, index) => <Button key={template.label} icon={<Plus className="h-4 w-4" />} onClick={() => createFromTemplate(index)}>{template.label}</Button>)}
         </div>
       </aside>
@@ -95,8 +97,8 @@ export const VisualBuilder = () => {
       <section className="grid gap-3">
         <div className="rounded-2xl border border-white/[0.08] bg-slate-900/72 p-3 shadow-glow backdrop-blur-xl">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-lg font-black text-white">Sequences in {sceneName}</h2>
-            <Button icon={<Plus className="h-4 w-4" />} onClick={() => createFromTemplate(6)}>New Custom</Button>
+            <h2 className="text-lg font-black text-white">{t("sequencesIn")} {sceneName}</h2>
+            <Button icon={<Plus className="h-4 w-4" />} onClick={() => createFromTemplate(6)}>{t("newCustom")}</Button>
           </div>
           <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-3">
             {sequences.map((sequence) => (
@@ -104,17 +106,17 @@ export const VisualBuilder = () => {
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <h3 className="truncate font-black text-white">{sequence.label}</h3>
-                    <p className="text-xs text-slate-400">Slot {sequence.slot ?? "-"} / {sequence.steps.length} steps / {sequence.managedSources.length} sources / used in {usedCount(sequence.id)} cues</p>
+                    <p className="text-xs text-slate-400">{t("slot")} {sequence.slot ?? "-"} / {sequence.steps.length} {t("steps")} / {sequence.managedSources.length} {t("sources")} / {t("usedIn")} {usedCount(sequence.id)} {t("cues")}</p>
                   </div>
                 </div>
                 <div className="mt-3 grid grid-cols-2 gap-2">
-                  <Button icon={<Pencil className="h-4 w-4" />} onClick={() => setEditing(structuredClone(sequence))}>Edit</Button>
-                  <Button icon={<Copy className="h-4 w-4" />} onClick={() => duplicateSequence(sequence)}>Duplicate</Button>
+                  <Button icon={<Pencil className="h-4 w-4" />} onClick={() => setEditing(structuredClone(sequence))}>{t("edit")}</Button>
+                  <Button icon={<Copy className="h-4 w-4" />} onClick={() => duplicateSequence(sequence)}>{t("duplicate")}</Button>
                   <Button icon={<FlaskConical className="h-4 w-4" />} onClick={async () => {
                     await obsClient.setCurrentPreviewScene(sequence.sceneName);
                     await sequenceRunner.runSequence(obsClient, sequence);
-                  }}>Test</Button>
-                  <Button variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => setDeleteTarget(sequence)}>Delete</Button>
+                  }}>{t("test")}</Button>
+                  <Button variant="danger" icon={<Trash2 className="h-4 w-4" />} onClick={() => setDeleteTarget(sequence)}>{t("delete")}</Button>
                 </div>
               </article>
             ))}
@@ -124,9 +126,9 @@ export const VisualBuilder = () => {
         {editing ? (
           <div className="rounded-2xl border border-cyan-200/30 bg-cyan-300/10 p-3 shadow-glow">
             <div className="grid gap-2 md:grid-cols-[1fr_120px_auto]">
-              <Field label="Sequence label"><Input value={editing.label} onChange={(event) => setEditing({ ...editing, label: event.target.value })} /></Field>
-              <Field label="Slot"><Input type="number" min={1} max={9} value={editing.slot ?? ""} onChange={(event) => setEditing({ ...editing, slot: event.target.value ? Number(event.target.value) : undefined })} /></Field>
-              <Button className="self-end" variant="primary" icon={<Save className="h-4 w-4" />} onClick={save}>Save</Button>
+              <Field label={t("sequenceLabel")}><Input value={editing.label} onChange={(event) => setEditing({ ...editing, label: event.target.value })} /></Field>
+              <Field label={t("slot")}><Input type="number" min={1} max={9} value={editing.slot ?? ""} onChange={(event) => setEditing({ ...editing, slot: event.target.value ? Number(event.target.value) : undefined })} /></Field>
+              <Button className="self-end" variant="primary" icon={<Save className="h-4 w-4" />} onClick={save}>{t("save")}</Button>
             </div>
             <div className="mt-3 grid gap-2">
               {editing.steps.map((step, index) => (
@@ -144,26 +146,26 @@ export const VisualBuilder = () => {
                     </div>
                   ) : step.type === "wait" ? <Input type="number" value={step.ms} onChange={(event) => updateStep(index, { type: "wait", ms: Number(event.target.value) })} /> : step.type === "preview" ? <Input value={step.sceneName} onChange={(event) => updateStep(index, { type: "preview", sceneName: event.target.value })} /> : <div className="text-sm text-slate-400">{stepLabel(step)}</div>}
                   <div className="flex gap-1">
-                    <Button variant="ghost" onClick={() => setEditing({ ...editing, steps: editing.steps.filter((_, i) => i !== index) })}>Del</Button>
-                    <Button variant="ghost" onClick={() => setEditing({ ...editing, steps: [...editing.steps.slice(0, index + 1), structuredClone(step), ...editing.steps.slice(index + 1)] })}>Dup</Button>
-                    <Button variant="ghost" onClick={() => index > 0 && setEditing({ ...editing, steps: editing.steps.map((s, i) => i === index - 1 ? step : i === index ? editing.steps[index - 1] : s) })}>Up</Button>
-                    <Button variant="ghost" onClick={() => index < editing.steps.length - 1 && setEditing({ ...editing, steps: editing.steps.map((s, i) => i === index + 1 ? step : i === index ? editing.steps[index + 1] : s) })}>Dn</Button>
+                    <Button variant="ghost" onClick={() => setEditing({ ...editing, steps: editing.steps.filter((_, i) => i !== index) })}>{t("del")}</Button>
+                    <Button variant="ghost" onClick={() => setEditing({ ...editing, steps: [...editing.steps.slice(0, index + 1), structuredClone(step), ...editing.steps.slice(index + 1)] })}>{t("dup")}</Button>
+                    <Button variant="ghost" onClick={() => index > 0 && setEditing({ ...editing, steps: editing.steps.map((s, i) => i === index - 1 ? step : i === index ? editing.steps[index - 1] : s) })}>{t("up")}</Button>
+                    <Button variant="ghost" onClick={() => index < editing.steps.length - 1 && setEditing({ ...editing, steps: editing.steps.map((s, i) => i === index + 1 ? step : i === index ? editing.steps[index + 1] : s) })}>{t("dn")}</Button>
                   </div>
                 </div>
               ))}
-              <Button onClick={() => setEditing({ ...editing, steps: [...editing.steps, { type: "hide_all" }] })}>Add visual step</Button>
+              <Button onClick={() => setEditing({ ...editing, steps: [...editing.steps, { type: "hide_all" }] })}>{t("addVisualStep")}</Button>
             </div>
           </div>
         ) : null}
       </section>
 
       {deleteTarget ? (
-        <Modal title="Delete sequence" onClose={() => setDeleteTarget(null)}>
-          <p className="text-sm text-slate-300">This sequence is used by {usedCount(deleteTarget.id)} cues. Deleting it will also remove or unlink those cues.</p>
+        <Modal title={t("deleteSequence")} onClose={() => setDeleteTarget(null)}>
+          <p className="text-sm text-slate-300">{t("deleteSequenceBody", { count: usedCount(deleteTarget.id) })}</p>
           <div className="mt-4 grid gap-2 sm:grid-cols-3">
-            <Button onClick={() => setDeleteTarget(null)}>Cancel</Button>
-            <Button variant="danger" onClick={() => deleteSequence(deleteTarget.id, "remove-cues").then(() => setDeleteTarget(null))}>Delete and remove cues</Button>
-            <Button variant="warning" onClick={() => deleteSequence(deleteTarget.id, "keep-broken").then(() => setDeleteTarget(null))}>Keep broken cues</Button>
+            <Button onClick={() => setDeleteTarget(null)}>{t("cancel")}</Button>
+            <Button variant="danger" onClick={() => deleteSequence(deleteTarget.id, "remove-cues").then(() => setDeleteTarget(null))}>{t("deleteAndRemoveCues")}</Button>
+            <Button variant="warning" onClick={() => deleteSequence(deleteTarget.id, "keep-broken").then(() => setDeleteTarget(null))}>{t("keepBrokenCues")}</Button>
           </div>
         </Modal>
       ) : null}

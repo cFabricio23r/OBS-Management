@@ -18,6 +18,7 @@ import {
 import { useAppStore } from "../../store/useAppStore";
 import { useObsStore } from "../../store/useObsStore";
 import { obsClient } from "../../lib/obs/obsClient";
+import { useT } from "../../lib/i18n/translations";
 import { sequenceRunner } from "../../lib/sequence/sequenceEngine";
 import { findSequence } from "../../lib/sequence/validators";
 import { uid } from "../../lib/sequence/sequenceTemplates";
@@ -31,6 +32,7 @@ const SortableQueueItem = ({ cue, index }: { cue: Cue; index: number }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: cue.id });
   const { config, selectedCueIndex, preparedCueId, selectCue, deleteCue } = useAppStore();
   const sequence = findSequence(config, cue.sequenceId);
+  const t = useT();
   const active = index === selectedCueIndex;
   const prepared = preparedCueId === cue.id;
 
@@ -59,7 +61,7 @@ const SortableQueueItem = ({ cue, index }: { cue: Cue; index: number }) => {
           </div>
           <div className="mt-1 truncate pl-8 text-xs text-slate-400">{cue.sceneName}</div>
         </button>
-        <button className="rounded p-2 text-slate-500 hover:bg-rose-500/15 hover:text-rose-200" onClick={() => deleteCue(cue.id)} title="Remove from queue">
+        <button className="rounded p-2 text-slate-500 hover:bg-rose-500/15 hover:text-rose-200" onClick={() => deleteCue(cue.id)} title={t("removeFromQueue")}>
           <Trash2 className="h-4 w-4" />
         </button>
       </div>
@@ -81,6 +83,7 @@ export const OperatorView = () => {
     reorderRundown,
   } = useAppStore();
   const obs = useObsStore();
+  const t = useT();
   const cue = config.rundown[selectedCueIndex];
   const sequence = cue ? findSequence(config, cue.sequenceId) : undefined;
   const configuredScenes = Object.keys(config.sequences);
@@ -167,50 +170,50 @@ export const OperatorView = () => {
             <div className="mb-3 grid gap-2 sm:gap-3 lg:grid-cols-[1fr_auto]">
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.05] p-4">
                 <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-cyan-200">
-                  <Radio className="h-4 w-4" /> Switcher Console
+                  <Radio className="h-4 w-4" /> {t("switcherConsole")}
                 </div>
                 <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="truncate text-xl font-black text-white sm:text-2xl">{sequence?.label ?? "No sequence armed"}</div>
-                    <div className="mt-1 line-clamp-2 text-sm text-slate-400 sm:truncate">{cue ? `${cue.sceneName} / next in queue` : "Add a sequence to the queue or run a quick sequence."}</div>
+                    <div className="truncate text-xl font-black text-white sm:text-2xl">{sequence?.label ?? t("noSequenceArmed")}</div>
+                    <div className="mt-1 line-clamp-2 text-sm text-slate-400 sm:truncate">{cue ? `${cue.sceneName} / ${t("nextInQueue")}` : t("addSequenceHint")}</div>
                   </div>
                   <div className={`rounded-full px-3 py-1 text-xs font-black ${preparedCueId === cue?.id ? "bg-emerald-400/18 text-emerald-100" : "bg-white/8 text-slate-300"}`}>
-                    {preparedCueId === cue?.id ? "In Preview" : "Standby"}
+                    {preparedCueId === cue?.id ? t("inPreview") : t("standby")}
                   </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2 rounded-2xl border border-white/[0.08] bg-white/[0.04] p-2 sm:grid-cols-4">
-                <Button variant="primary" className="min-h-[58px] px-2" shortcut="Space" icon={<Play className="h-5 w-5" />} onClick={previewQueueItem}>Preview</Button>
-                <Button variant="danger" className="min-h-[58px] px-2" shortcut="T" icon={<StepForward className="h-5 w-5" />} onClick={take}>Take</Button>
-                <Button className="min-h-[50px] px-2 sm:min-h-[56px]" shortcut="B" icon={<ArrowUp className="h-4 w-4" />} onClick={previousCue}>Back</Button>
-                <Button className="min-h-[50px] px-2 sm:min-h-[56px]" shortcut="N" icon={<ArrowDown className="h-4 w-4" />} onClick={nextCue}>Next</Button>
+                <Button variant="primary" className="min-h-[58px] px-2" shortcut="Space" icon={<Play className="h-5 w-5" />} onClick={previewQueueItem}>{t("preview")}</Button>
+                <Button variant="danger" className="min-h-[58px] px-2" shortcut="T" icon={<StepForward className="h-5 w-5" />} onClick={take}>{t("take")}</Button>
+                <Button className="min-h-[50px] px-2 sm:min-h-[56px]" shortcut="B" icon={<ArrowUp className="h-4 w-4" />} onClick={previousCue}>{t("back")}</Button>
+                <Button className="min-h-[50px] px-2 sm:min-h-[56px]" shortcut="N" icon={<ArrowDown className="h-4 w-4" />} onClick={nextCue}>{t("next")}</Button>
               </div>
             </div>
 
             <div className="mb-3 grid gap-2 sm:gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-2xl border border-rose-300/28 bg-rose-500/10 p-3">
-                <div className="text-[10px] font-black uppercase tracking-wide text-rose-200">Program</div>
-                <div className="mt-2 truncate text-lg font-black text-white">{obs.state.programScene ?? "Unknown"}</div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-rose-200">{t("program")}</div>
+                <div className="mt-2 truncate text-lg font-black text-white">{obs.state.programScene ?? t("unknown")}</div>
               </div>
               <div className="rounded-2xl border border-cyan-200/28 bg-cyan-300/10 p-3">
-                <div className="text-[10px] font-black uppercase tracking-wide text-cyan-200">Preview</div>
-                <div className="mt-2 truncate text-lg font-black text-white">{obs.state.previewScene ?? "Unknown"}</div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-cyan-200">{t("preview")}</div>
+                <div className="mt-2 truncate text-lg font-black text-white">{obs.state.previewScene ?? t("unknown")}</div>
               </div>
               <div className="rounded-2xl border border-emerald-300/25 bg-emerald-400/10 p-3">
-                <div className="text-[10px] font-black uppercase tracking-wide text-emerald-200">Armed Cue</div>
-                <div className="mt-2 truncate text-lg font-black text-white">{sequence?.label ?? "None"}</div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-emerald-200">{t("armedCue")}</div>
+                <div className="mt-2 truncate text-lg font-black text-white">{sequence?.label ?? t("none")}</div>
               </div>
               <div className="rounded-2xl border border-white/[0.08] bg-white/[0.045] p-3">
-                <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Queue</div>
-                <div className="mt-2 text-lg font-black text-white">{config.rundown.length} transitions</div>
+                <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">{t("queue")}</div>
+                <div className="mt-2 text-lg font-black text-white">{config.rundown.length} {t("transitions")}</div>
               </div>
             </div>
 
             <div className="grid gap-2 sm:gap-3 2xl:grid-cols-[0.86fr_1.14fr]">
               <section className="rounded-2xl border border-white/[0.08] bg-white/[0.045] p-3">
                 <div className="mb-3 flex items-center justify-between gap-2">
-                  <div className="text-[11px] font-black uppercase tracking-wide text-cyan-200">Scenes</div>
+                  <div className="text-[11px] font-black uppercase tracking-wide text-cyan-200">{t("scenes")}</div>
                   <div className="text-[11px] font-bold text-slate-500">Shift + 1-9</div>
                 </div>
                 <div className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 md:grid-cols-3 2xl:grid-cols-2">
@@ -234,22 +237,22 @@ export const OperatorView = () => {
                           <kbd className="rounded-md bg-black/35 px-1.5 py-0.5 text-[10px] font-black text-slate-200">S+{index + 1}</kbd>
                         </div>
                         <div className={`mt-4 inline-flex rounded-full px-2 py-0.5 text-[10px] font-black uppercase ${live ? "bg-rose-500/20 text-rose-100" : active ? "bg-sky-500/20 text-sky-100" : "bg-slate-700/55 text-slate-300"}`}>
-                          {live ? "Program" : active ? "Preview" : "Available"}
+                          {live ? t("program") : active ? t("preview") : t("available")}
                         </div>
                       </button>
                     );
                   })}
-                {!sceneNames.length ? <div className="col-span-full rounded-xl border border-dashed border-white/15 p-4 text-sm text-slate-400">Connect OBS or create scenes in Visual Builder.</div> : null}
+                {!sceneNames.length ? <div className="col-span-full rounded-xl border border-dashed border-white/15 p-4 text-sm text-slate-400">{t("connectObsOrCreateScenes")}</div> : null}
                 </div>
               </section>
 
               <section className="rounded-2xl border border-white/[0.08] bg-white/[0.045] p-3">
                 <div className="mb-3 flex items-center justify-between gap-2">
                   <div>
-                    <div className="text-[11px] font-black uppercase tracking-wide text-emerald-200">Quick Sequences</div>
-                    <div className="text-xs text-slate-500">{previewScene ?? "No preview scene"}</div>
+                    <div className="text-[11px] font-black uppercase tracking-wide text-emerald-200">{t("quickSequences")}</div>
+                    <div className="text-xs text-slate-500">{previewScene ?? t("noPreviewScene")}</div>
                   </div>
-                  <Button variant="ghost" icon={<Square className="h-4 w-4" />} shortcut="X" onClick={() => sequenceRunner.stop()}>Stop</Button>
+                  <Button variant="ghost" icon={<Square className="h-4 w-4" />} shortcut="X" onClick={() => sequenceRunner.stop()}>{t("stop")}</Button>
                 </div>
                 <div className="grid grid-cols-1 gap-2 lg:grid-cols-2">
                   {previewSequences.slice(0, 9).map((item, index) => (
@@ -260,17 +263,17 @@ export const OperatorView = () => {
                           <kbd className="shrink-0 rounded-md bg-emerald-500/18 px-1.5 py-0.5 text-[10px] font-black text-emerald-100">{item.slot ?? index + 1}</kbd>
                         </div>
                         <div className="mt-2 flex items-center gap-2 text-xs text-slate-500">
-                          <span>{item.steps.length} steps</span>
+                          <span>{item.steps.length} {t("steps")}</span>
                           <span className="h-1 w-1 rounded-full bg-slate-600" />
-                          <span>{item.managedSources.length} sources</span>
+                          <span>{item.managedSources.length} {t("sources")}</span>
                         </div>
                       </button>
-                      <button className="grid min-h-[84px] w-14 place-items-center border-l border-white/10 text-slate-300 hover:bg-sky-500/15 hover:text-sky-100" onClick={() => addToQueue(item)} title="Add to queue">
+                      <button className="grid min-h-[84px] w-14 place-items-center border-l border-white/10 text-slate-300 hover:bg-sky-500/15 hover:text-sky-100" onClick={() => addToQueue(item)} title={t("addToQueue")}>
                         <Plus className="h-5 w-5" />
                       </button>
                     </article>
                   ))}
-                  {!previewSequences.length ? <div className="col-span-full rounded-xl border border-dashed border-white/15 p-4 text-sm text-slate-400">No quick sequences for this Preview scene.</div> : null}
+                  {!previewSequences.length ? <div className="col-span-full rounded-xl border border-dashed border-white/15 p-4 text-sm text-slate-400">{t("noQuickSequences")}</div> : null}
                 </div>
               </section>
             </div>
@@ -279,17 +282,17 @@ export const OperatorView = () => {
           <aside className="border-t border-white/[0.08] bg-slate-950/46 p-2 sm:p-3 xl:border-l xl:border-t-0">
             <div className="mb-3 rounded-2xl border border-white/[0.08] bg-white/[0.05] p-3">
               <div className="flex items-center justify-between gap-2">
-                <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">Up Next</div>
-                {cue ? <Button variant="ghost" icon={<Trash2 className="h-4 w-4" />} onClick={() => deleteCue(cue.id)}>Clear</Button> : null}
+                <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t("upNext")}</div>
+                {cue ? <Button variant="ghost" icon={<Trash2 className="h-4 w-4" />} onClick={() => deleteCue(cue.id)}>{t("clear")}</Button> : null}
               </div>
               <div className="mt-2 flex items-center gap-2">
                 <ChevronRight className="h-5 w-5 text-cyan-200" />
-                <div className="min-w-0 flex-1 truncate text-lg font-black text-white">{sequence?.label ?? cue?.title ?? "Queue empty"}</div>
+                <div className="min-w-0 flex-1 truncate text-lg font-black text-white">{sequence?.label ?? cue?.title ?? t("queueEmpty")}</div>
               </div>
             </div>
 
             <div className="mb-2 flex items-center gap-2 text-[11px] font-black uppercase tracking-wide text-slate-300">
-              <ListPlus className="h-4 w-4 text-cyan-200" /> Sequence Queue
+              <ListPlus className="h-4 w-4 text-cyan-200" /> {t("sequenceQueue")}
             </div>
             <DndContext onDragEnd={onDragEnd}>
               <SortableContext items={config.rundown.map((item) => item.id)} strategy={verticalListSortingStrategy}>
@@ -297,7 +300,7 @@ export const OperatorView = () => {
                   {config.rundown.map((item, index) => <SortableQueueItem key={item.id} cue={item} index={index} />)}
                   {!config.rundown.length ? (
                     <div className="rounded-xl border border-dashed border-white/15 p-4 text-sm text-slate-400">
-                      Add quick sequences with the + button to build the next few moves.
+                      {t("queueHint")}
                     </div>
                   ) : null}
                 </div>

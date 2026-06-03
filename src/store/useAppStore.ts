@@ -5,9 +5,11 @@ import { loadConfig, saveConfig } from "../lib/storage/storage";
 import { appConfigSchema } from "../schemas/config.schema";
 
 type AppView = "operator" | "builder" | "settings";
+export type Language = "en" | "es";
 
 type AppStore = {
   view: AppView;
+  language: Language;
   config: AppConfig;
   selectedCueIndex: number;
   preparedCueId?: string;
@@ -15,6 +17,8 @@ type AppStore = {
   toast?: AppLog;
   hydrated: boolean;
   setView: (view: AppView) => void;
+  setLanguage: (language: Language) => void;
+  toggleLanguage: () => void;
   hydrate: () => Promise<void>;
   persist: () => Promise<void>;
   replaceConfig: (config: AppConfig) => Promise<void>;
@@ -41,11 +45,17 @@ const sortSequences = (config: AppConfig) => {
 
 export const useAppStore = create<AppStore>((set, get) => ({
   view: "operator",
+  language: (window.localStorage.getItem("language") as Language | null) ?? "en",
   config: createSampleConfig(),
   selectedCueIndex: 0,
   logs: [],
   hydrated: false,
   setView: (view) => set({ view }),
+  setLanguage: (language) => {
+    window.localStorage.setItem("language", language);
+    set({ language });
+  },
+  toggleLanguage: () => get().setLanguage(get().language === "en" ? "es" : "en"),
   hydrate: async () => {
     const config = (await loadConfig().catch(() => null)) ?? createSampleConfig();
     set({ config: sortSequences(config), hydrated: true });
